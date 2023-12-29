@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('test')
 
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
@@ -8,6 +9,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // By default, load the inbox
   load_mailbox('inbox');
+
+
+  document.querySelector("form").onsubmit = async (e) => {
+    e.preventDefault()
+    const recipients = document.querySelector("#compose-recipients").value;
+    const subject = document.querySelector("#compose-subject").value;
+    const body = document.querySelector("#compose-body").value;
+
+   
+  }
+
 });
 
 function compose_email() {
@@ -22,12 +34,45 @@ function compose_email() {
   document.querySelector('#compose-body').value = '';
 }
 
-function load_mailbox(mailbox) {
-  
+async function load_mailbox(mailbox) {
+
+  console.log(mailbox)
+  const req = await fetch(`/emails/${mailbox}`)
+  const res = await req.json();
+
+  const mails = res;
+
+
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
 
   // Show the mailbox name
-  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+  const emails_view = document.querySelector('#emails-view');
+  emails_view.innerHTML = `<h3 class="py-2 font-bold text-2xl">${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+  const mail_container = document.createElement("section");
+
+  mail_container.classList.add()
+  mails.forEach(element => {
+
+    const container = document.createElement('div')
+    const sender = document.createElement("h4");
+    const subject = document.createElement("h5");
+    const content = document.createElement("p");
+    const separator = document.createElement('hr')
+
+    sender.innerText = `${mailbox === 'inbox' ? `Sender` : `To`}: ${element.sender}`
+    subject.innerText = `Subject: ${element.subject}`
+    content.innerText = element.body
+
+    content.classList.add("text-break");
+    container.classList.add("my-4", "bg-gray-700", "p-4", "rounded-md");
+
+    container.append(sender, subject, content)
+    mail_container.append(container)
+  })
+
+  emails_view.append(mail_container)
 }
+
