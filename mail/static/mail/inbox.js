@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-  console.log('test')
-
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
@@ -10,14 +8,31 @@ document.addEventListener('DOMContentLoaded', function () {
   // By default, load the inbox
   load_mailbox('inbox');
 
-
   document.querySelector("form").onsubmit = async (e) => {
     e.preventDefault()
     const recipients = document.querySelector("#compose-recipients").value;
     const subject = document.querySelector("#compose-subject").value;
     const body = document.querySelector("#compose-body").value;
 
-   
+    const res = await fetch('/emails', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recipients,
+        subject,
+        body
+      })
+    })
+    const result = await res.json()
+
+    if (result.error) {
+      alert(result.error)
+    } else {
+      alert(result.message)
+      load_mailbox('sent')
+    }
   }
 
 });
@@ -36,7 +51,6 @@ function compose_email() {
 
 async function load_mailbox(mailbox) {
 
-  console.log(mailbox)
   const req = await fetch(`/emails/${mailbox}`)
   const res = await req.json();
 
@@ -60,14 +74,13 @@ async function load_mailbox(mailbox) {
     const sender = document.createElement("h4");
     const subject = document.createElement("h5");
     const content = document.createElement("p");
-    const separator = document.createElement('hr')
 
     sender.innerText = `${mailbox === 'inbox' ? `Sender` : `To`}: ${element.sender}`
     subject.innerText = `Subject: ${element.subject}`
     content.innerText = element.body
 
     content.classList.add("text-break");
-    container.classList.add("my-4", "bg-gray-700", "p-4", "rounded-md");
+    container.classList.add("my-4", `${element.read === true ? 'bg-gray-700' : 'bg-white'}`, "p-4", "rounded-md", `${element.read === true ? 'text-white' : "text-black"}`);
 
     container.append(sender, subject, content)
     mail_container.append(container)
