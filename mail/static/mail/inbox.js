@@ -63,6 +63,7 @@ const create_mail_box = (mail, mailbox, open) => {
   const subject = document.createElement("h5");
   const content = document.createElement("p");
 
+
   sender.innerText = `${mailbox === 'inbox' ? `Sender` : `To`}: ${mail.sender}`
   subject.innerText = `Subject: ${mail.subject}`;
   timestamp.innerText = `Timestamp: ${mail.subject}`;
@@ -84,6 +85,8 @@ const create_mail_box = (mail, mailbox, open) => {
   } else {
     container.append(sender, subject, content)
   }
+
+
 
   return container
 }
@@ -114,14 +117,42 @@ const view_email = (mail, mailbox) => {
   const view = create_mail_box(mail, mailbox, true);
 
   emails_view.innerHTML = ``
+  if (mailbox === 'inbox' || mailbox === 'archive') {
+    const container = document.createElement('div');
+    const button = document.createElement('button');
+
+    container.classList.add('flex', 'justify-end');
+    button.classList.add('p-3', 'rounded-md', 'bg-red-900', 'mt-4',);
+    button.innerHTML = `${mailbox === 'archive' ? 'Unarchive' : 'Archive'}`;
+
+    button.onclick = () => {
+      fetch(`/emails/${mail.id}`, {
+        method: 'PUT',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+
+          ...mail,
+          archived: mail.archived === true ? false : true
+
+        })
+      })
+      alert("Mail archived")
+      load_mailbox('inbox')
+      // button.innerHTML = `${mail.archived === true ? 'Archive' : 'Unarchive'}`
+    }
+
+    container.append(button);
+    emails_view.append(container);
+  }
   emails_view.append(view)
 }
-
 
 async function load_mailbox(mailbox) {
 
   const req = await fetch(`/emails/${mailbox}`)
-  const mails = await req.json();
+  const mails = await req.json()
 
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
@@ -130,6 +161,7 @@ async function load_mailbox(mailbox) {
   // Show the mailbox name
   const emails_view = document.querySelector('#emails-view');
   emails_view.innerHTML = `<h3 class="py-2 font-bold text-2xl">${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
 
   const mail_container = document.createElement("section");
 
@@ -140,7 +172,6 @@ async function load_mailbox(mailbox) {
 
     mail_container.append(view)
   })
-
   emails_view.append(mail_container)
 }
 
