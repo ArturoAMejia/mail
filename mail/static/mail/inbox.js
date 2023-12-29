@@ -49,13 +49,79 @@ function compose_email() {
   document.querySelector('#compose-body').value = '';
 }
 
+/**
+ * 
+ * @param {string} mail 
+ * @param {string} mailbox 
+ */
+const create_mail_box = (mail, mailbox, open) => {
+
+  const container = document.createElement('div')
+  const sender = document.createElement("h4");
+  const timestamp = document.createElement("h4");
+  const recipients = document.createElement("h4");
+  const subject = document.createElement("h5");
+  const content = document.createElement("p");
+
+  sender.innerText = `${mailbox === 'inbox' ? `Sender` : `To`}: ${mail.sender}`
+  subject.innerText = `Subject: ${mail.subject}`;
+  timestamp.innerText = `Timestamp: ${mail.subject}`;
+  recipients.innerText = `Recipients: ${mail.subject}`;
+  content.innerText = mail.body;
+
+  container.classList.add('my-4', "p-4", "rounded-md", 'bg-white', 'text-black', 'h-24', 'truncate')
+
+  if (mail.read === true) {
+    container.classList.add('bg-gray-700', 'text-white')
+    container.classList.remove('bg-white', 'text-black')
+  }
+
+  if (open === true) {
+    container.classList.add('h-full');
+    container.classList.remove('truncate');
+
+    container.append(sender, recipients, subject, timestamp, content);
+  } else {
+    container.append(sender, subject, content)
+  }
+
+  return container
+}
+
+/**
+ * 
+ * @param {string} mail 
+ * @param {string} mailbox 
+ */
+const view_email = (mail, mailbox) => {
+  console.log({ mail, mailbox })
+
+
+  fetch(`/emails/${mail.id}`, {
+    method: 'PUT',
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+
+      ...mail,
+      read: true
+
+    })
+  })
+  const emails_view = document.querySelector('#emails-view');
+
+  const view = create_mail_box(mail, mailbox, true);
+
+  emails_view.innerHTML = ``
+  emails_view.append(view)
+}
+
+
 async function load_mailbox(mailbox) {
 
   const req = await fetch(`/emails/${mailbox}`)
-  const res = await req.json();
-
-  const mails = res;
-
+  const mails = await req.json();
 
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
@@ -67,23 +133,12 @@ async function load_mailbox(mailbox) {
 
   const mail_container = document.createElement("section");
 
-  mail_container.classList.add()
   mails.forEach(element => {
+    const view = create_mail_box(element, mailbox, false)
 
-    const container = document.createElement('div')
-    const sender = document.createElement("h4");
-    const subject = document.createElement("h5");
-    const content = document.createElement("p");
+    view.onclick = () => view_email(element, mailbox)
 
-    sender.innerText = `${mailbox === 'inbox' ? `Sender` : `To`}: ${element.sender}`
-    subject.innerText = `Subject: ${element.subject}`
-    content.innerText = element.body
-
-    content.classList.add("text-break");
-    container.classList.add("my-4", `${element.read === true ? 'bg-gray-700' : 'bg-white'}`, "p-4", "rounded-md", `${element.read === true ? 'text-white' : "text-black"}`);
-
-    container.append(sender, subject, content)
-    mail_container.append(container)
+    mail_container.append(view)
   })
 
   emails_view.append(mail_container)
