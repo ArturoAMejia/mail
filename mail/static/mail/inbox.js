@@ -61,7 +61,7 @@ function compose_email(replay = false, mail = {}) {
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = `${replay === true ? new_recipients.toString() : ''}`;
-  document.querySelector('#compose-subject').value = `${(replay === true && !mail.subject.includes('Re: ')) ? `Re: ${mail.subject}` : mail.subject}`;
+  document.querySelector('#compose-subject').value = `${(replay === true && !mail.subject.includes('Re: ')) ? `Re: ${mail.subject}` : mail.subject || ''}`;
   document.querySelector('#compose-body').value = `${replay === true ? `On ${mail.timestamp} ${mail.sender} wrote: ` : ''}`
 }
 
@@ -145,7 +145,7 @@ const view_email = (mail, mailbox) => {
     reply_button.onclick = () => compose_email(true, mail)
 
 
-    archive_button.onclick = () => {
+    archive_button.onclick = (e) => {
       fetch(`/emails/${mail.id}`, {
         method: 'PUT',
         headers: {
@@ -158,7 +158,8 @@ const view_email = (mail, mailbox) => {
 
         })
       })
-      alert("Mail archived")
+      console.log(e)
+      alert(`${mailbox === 'archive' ? 'Unarchived mail' : 'Archived mail'}`)
       load_mailbox('inbox')
     }
 
